@@ -49,6 +49,29 @@ export const exportCsv = async (
 };
 
 /**
+ * Export a query to a CSV file with a given filename.
+ */
+export const exportQueryCsv = async (
+  db: AsyncDuckDB,
+  query: string,
+  filename: string='export.csv',
+  delimiter = ",",
+): Promise<File> => {
+  query = sanitizeQuery(query, [";"]);
+
+  const tempFile = getTempFilename();
+  await runQuery(
+    db,
+    `COPY (${query}) TO '${tempFile}' WITH (HEADER 1, DELIMITER '${delimiter}')`,
+  );
+
+  const buffer = await db.copyFileToBuffer(tempFile);
+  await db.dropFile(tempFile);
+
+  return new File([buffer], filename, { type: CSV_MIME_TYPE });
+};
+
+/**
  * Export a table to Parquet.
  *
  * Uses zstd compression by default, which seems to be both smaller & faster for many files.
@@ -95,3 +118,17 @@ const getExportedFilename = (tableName: string, extension: string) => {
 
   return basename + "." + extension;
 };
+
+/**
+ * Sanitizes the query by removing all occurrences of each character in charToRemove.
+ * @param query - The input query string.
+ * @param charToRemove - An array of characters to remove from the query.
+ * @returns The sanitized query string.
+ */
+function sanitizeQuery(query: string, charToRemove: string[]): string {
+  charToRemove.forEach(char => {
+      const regex = new RegExp(char, 'g');
+      query = query.replace(regex, '');
+  });
+  return query;
+}
