@@ -1,13 +1,13 @@
 {
-  "name": "duckdb-wasm-kit",
-  "version": "0.1.38",
+  "name": "duckdb-wasm-api",
+  "version": "0.1.0",
   "description": "Utilities to make it easier to use duckdb-wasm in React apps.",
-  "author": "Matt Holden",
+  "author": "Nicolas Vallée",
   "license": "MIT",
-  "homepage": "https://github.com/holdenmatt/duckdb-wasm-kit",
+  "homepage": "https://github.com/invokify/duckdb-wasm-api",
   "repository": {
     "type": "git",
-    "url": "https://github.com/holdenmatt/duckdb-wasm-kit"
+    "url": "https://github.com/invokify/duckdb-wasm-api"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

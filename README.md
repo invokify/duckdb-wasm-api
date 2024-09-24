@@ -6,7 +6,7 @@ Hooks and utilities to make it easier to use
 ## Install
 
 ```
-npm install duckdb-wasm-kit
+npm install duckdb-wasm-api
 npm install @duckdb/duckdb-wasm
 ```
 
@@ -138,7 +138,7 @@ all the [AsyncDuckDb](https://shell.duckdb.org/docs/classes/index.AsyncDuckDB.ht
 ## Importing files
 
 The `insertFile` function handles the
-[annoying details](https://github.com/holdenmatt/duckdb-wasm-kit/blob/main/src/files/insertFile.ts)
+[annoying details](https://github.com/invokify/duckdb-wasm-api/blob/main/src/files/insertFile.ts)
 of importing a file:
 
 ```
@@ -203,11 +203,12 @@ or removed in the future, so don't depend on them.
 
 ## Contributing
 
-Found a bug? Please [submit an issue](https://github.com/holdenmatt/duckdb-wasm-kit/issues/new).
+Found a bug? Please [submit an issue](https://github.com/invokify/duckdb-wasm-api/issues/new).
 
 ## Contributors
 
 [Ramon Vermeulen](https://github.com/ramonvermeulen)
+[Matt Holden](https://github.com/holdenmatt)
 
 ## Changelog
 - Jun 5, 2024: Upgrade to duckdb-wasm 1.28.1-dev211.0 (using duckdb 1.0)
