@@ -6,9 +6,9 @@ import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import { Table as Arrow } from "apache-arrow";
 
 import { inferTypes } from "../util/inferTypes";
-import { runQuery } from "../util/runQuery";
 import { logElapsedTime } from "../util/perf";
-import { getTempFilename } from "../util/tempfile";
+import { runQuery } from "../util/runQuery";
+import { getTempFilename, getTempFilenameBasedOnFile } from "../util/tempfile";
 import { arrayBufferToArrow, isArrowFile } from "./arrow";
 import { isParquetFile } from "./parquet";
 
@@ -72,6 +72,9 @@ const _insertFile = async (
         return;
       case "parquet":
         await insertParquet(db, file, tableName);
+        return;
+      case "json":
+        await insertJSON(db, file, tableName);
         return;
       case "csv":
         await insertCSV(db, file, tableName);
@@ -195,3 +198,39 @@ export const insertParquet = async (
     );
   }
 };
+
+export const insertJSON = async (
+  db: AsyncDuckDB,
+  file: File,
+  tableName: string,
+  unNest: boolean = true,
+): Promise<void> => {
+  try {
+    const text = await file.text();
+
+    const tempFileName = getTempFilenameBasedOnFile(file);
+    const tempFile = `${tempFileName}.json`;
+    await db.registerFileText(tempFile, text);
+
+    if (unNest) {
+      // import json file recursively unnested
+      await runQuery(db, `CREATE TABLE '${tableName}' AS SELECT unnest(${tempFileName}, recursive:=true) FROM '${tempFile}'`);
+    } else {
+      // import json file as a single column
+      const conn = await db.connect();
+      await conn.insertJSONFromPath(tempFile, {
+        name: tableName,
+        schema: "main",
+      });
+      await conn.close();
+    }
+
+    db.dropFile(tempFile);
+  } catch (e) {
+    console.error(e);
+    throw new InsertFileError(
+      "JSON import failed",
+      "Sorry, we couldn't import that file",
+    );
+  }
+}
