@@ -50,6 +50,7 @@ const _insertFile = async (
 ): Promise<void> => {
   try {
     tableName = tableName || file.name;
+    tableName = sanitizeTableName(tableName);
 
     // Try Parquet first.
     if (await isParquetFile(file)) {
@@ -234,3 +235,14 @@ export const insertJSON = async (
     );
   }
 }
+
+/**
+ * Sanitize a table name to snake_case.
+ */
+export const sanitizeTableName = (tableName: string): string => {
+  return tableName
+    .replace(/[^a-zA-Z0-9]/g, '_') // Replace non-alphanumeric characters with underscores
+    .replace(/([a-z])([A-Z])/g, '$1_$2') // Add underscore between camelCase words
+    .toLowerCase() // Convert to lowercase
+    .replace(/_+/g, '_'); // Replace multiple underscores with a single underscore
+};
