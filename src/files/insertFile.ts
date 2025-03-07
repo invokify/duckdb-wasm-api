@@ -106,10 +106,22 @@ export const insertCSV = async (
   tableName: string,
 ): Promise<void> => {
   try {
-    const text = await file.text();
-
     const tempFile = getTempFilename();
-    await db.registerFileText(tempFile, text);
+    const stream = file.stream();
+    const reader = stream.getReader();
+    let text = '';
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      // Convert the chunk to text and append it
+      const chunk = new TextDecoder().decode(value);
+      text += chunk;
+      
+      // Register the accumulated text so far
+      await db.registerFileText(tempFile, text);
+    }
 
     const conn = await db.connect();
     await conn.insertCSVFromPath(tempFile, {
