@@ -106,31 +106,23 @@ export const insertCSV = async (
   tableName: string,
 ): Promise<void> => {
   try {
-    const tempFile = getTempFilename();
-    const stream = file.stream();
-    const reader = stream.getReader();
-    let text = '';
-    
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      // Convert the chunk to text and append it
-      const chunk = new TextDecoder().decode(value);
-      text += chunk;
-      
-      // Register the accumulated text so far
-      await db.registerFileText(tempFile, text);
-    }
+    const tempFile = getTempFilename() + ".csv";
 
-    const conn = await db.connect();
-    await conn.insertCSVFromPath(tempFile, {
-      name: tableName,
-      schema: "main",
-      detect: true,
-    });
-    await conn.close();
-    db.dropFile(tempFile);
+    await runQuery(db, `SET memory_limit='4GB'`);
+
+    await db.registerFileHandle(tempFile, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+
+    await runQuery(db, `
+      CREATE TABLE large_data AS 
+      SELECT * 
+      FROM read_csv_auto('${tempFile}', 
+        parallel=true, 
+        sample_size=1000, 
+        all_varchar=false, 
+        header=true)
+    `);
+
+    await db.dropFile(tempFile);
 
     // Infer additional column types after CSV import.
     await inferTypes(db, tableName);
